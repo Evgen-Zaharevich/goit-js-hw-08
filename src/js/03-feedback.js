@@ -1,8 +1,10 @@
 import throttle from 'lodash.throttle';
 
 const formRef = document.querySelector(`.feedback-form`);
-const FEEDBACK_FORM_KEY = 'feedback-form-state';
 const { email, message } = formRef;
+const FEEDBACK_FORM_KEY = 'feedback-form-state';
+const formData = {};
+let savedData;
 
 formRef.addEventListener(`input`, throttle(onGetFormValues, 1000));
 formRef.addEventListener(`submit`, onFormSubmit);
@@ -10,30 +12,55 @@ formRef.addEventListener(`submit`, onFormSubmit);
 onPrintValuesFromStoreToTheForm();
 
 function onGetFormValues(e) {
-  localStorage.setItem(
-    FEEDBACK_FORM_KEY,
-    JSON.stringify({
-      email: email.value,
-      message: message.value,
-    })
-  );
+  const { name, value } = e.target;
+
+  formData[name] = value;
+
+  localStorage.setItem(FEEDBACK_FORM_KEY, JSON.stringify(formData));
 }
 
 function onPrintValuesFromStoreToTheForm() {
-  const savedData = JSON.parse(localStorage.getItem(FEEDBACK_FORM_KEY));
-
+  try {
+    savedData = JSON.parse(localStorage.getItem(FEEDBACK_FORM_KEY));
+  } catch (error) {
+    error.message;
+  }
+  // ===============================
+  // if (savedData) {
+  //   email.value = savedData.email;
+  //   message.value = savedData.message;
+  //   console.dir(email.value);
+  // }
+  // =======ALTERNATIVE================
+  // для будьякої кількості полей у формі
   if (savedData) {
-    email.value = savedData.email;
-    message.value = savedData.message;
+    for (const key in savedData) {
+      if (savedData.hasOwnProperty(key)) {
+        formRef.elements[key].value = savedData[key];
+      }
+    }
   }
 }
-
+// ========================================
 function onFormSubmit(e) {
   e.preventDefault();
 
-  console.log(`Данні введені в форму: 
-  email  ${email.value} 
-  message  ${message.value}`);
+  // console.log(`Дані введені в форму:
+  // Email => ${email.value}
+  // Message => ${message.value}`);
+
+  // ===================Alternative=====================
+
+  // for (const key in savedData) {
+  //       if (savedData.hasOwnProperty(key)) {
+  //         console.log(formRef.elements[key].value);;
+  //       }
+  // ==================Alternative=======================
+
+  const formData = new FormData(e.currentTarget);
+  formData.forEach((value, name) => {
+    console.log({ name, value });
+  });
 
   e.currentTarget.reset();
   localStorage.removeItem(FEEDBACK_FORM_KEY);
